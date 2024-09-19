@@ -1,8 +1,6 @@
 const canvas = document.getElementById('renderCanvas');
 checkOpengl(canvas);
-//const engine = new BABYLON.Engine(canvas, true);
 var engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-//engine.setHardwareScalingLevel(5);
 
 const infoOverlay = document.getElementById('infoOverlay');
 const fpsElement = document.getElementById('fps');
@@ -17,7 +15,7 @@ var numberBoxes = 100;
 
 
 var scene = createScene();
-var player = loadPlayer(scene);
+loadPlayer(scene);
 
 createCannon(scene);
 var camera = createCamera(scene);
@@ -27,25 +25,11 @@ createFloor(scene);
 createWalls(scene);
 manageEvent(scene);   
 createObjects(scene);
-   
-   // Crear un GUI para mostrar el FPS
-	var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
 
-	var fpsText = new BABYLON.GUI.TextBlock();
-	fpsText.text = "FPS: 0";
-	fpsText.color = "white";
-	fpsText.fontSize = 24;
-	//fpsText.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
-	//fpsText.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-	fpsText.top = "10px";
-	fpsText.right = "10px";
-
-	advancedTexture.addControl(fpsText);
-	
-	// Actualizar el texto de FPS
-	scene.onAfterRenderObservable.add(function () {
-		fpsText.text = "FPS: " + Math.round(engine.getFps());
-	});
+// Actualizar el texto de FPS
+scene.onAfterRenderObservable.add(function () {
+	fpsElement.innerHTML = "FPS: " + Math.round(engine.getFps());
+});
    
 engine.runRenderLoop(() => {
 	scene.render();
@@ -75,31 +59,75 @@ function createCannon(scene){
 	scene.enablePhysics(gravityVector, physicsPlugin);
 }
 
-
+const radius = 3; // Radio del círculo
+const angularSpeed = 0.1; // Velocidad angular en radianes por segundo
+let angle = 0; // Ángulo inicial
 function loadPlayer(scene) {
-    /*let player = BABYLON.SceneLoader.ImportMesh("", "assets/character/", "character.glb", scene, function (meshes) {
-        player = meshes[0]; // Asume que el primer mesh es el cuerpo principal del personaje
-        player.position = new BABYLON.Vector3(0, 0, 0); // Ajusta la posición inicial del personaje
-        player.scaling = new BABYLON.Vector3(1, 1, 1); // Ajusta el tamaño del personaje
-        player.checkCollisions = true; // Activa colisiones para el personaje
-        player.ellipsoid = new BABYLON.Vector3(1, 1, 1); // Ajusta el elipsoide de colisión
-        player.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0); // Ajusta el offset del elipsoide
-        player.physicsImpostor = new BABYLON.PhysicsImpostor(player, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0 }, scene);
-    });*/
 
+	
+	BABYLON.SceneLoader.ImportMesh("","assets/character/", "charo.glb", scene, function (meshes, particleSystems, skeletons) {
+		let initial = meshes[0];
+		initial.name = "trump";
+		console.log("Ms", meshes);
+		console.log("Ps", particleSystems);
+		console.log("Ss", skeletons);
+		//initial.position = new BABYLON.Vector3(2, 0, 0);
+		//initial.scaling = new BABYLON.Vector3(0.01, 0.01, 0.01); // Escalar a la mitad del tamaño original
+		initial.checkCollisions = true;
+		initial.refreshBoundingInfo();
 
-	BABYLON.SceneLoader.ImportMesh("","assets/character/", "animation.glb", scene, function (meshes, particleSystems, skeletons) {
-		const character = meshes[0]; // Asumiendo que el primer mesh es el personaje principal
-		character.position = new BABYLON.Vector3(0, 0, 0);
+		//initial.physicsImpostor = new BABYLON.PhysicsImpostor(initial, BABYLON.PhysicsImpostor.CapsuleImpostor, { mass: 0, restitution: 0.9 }, scene);
+		console.log("cargado ", initial.name);
+		var boundingInfo = initial.getBoundingInfo();
+		console.log("fff",boundingInfo);
+		var boundingBox = boundingInfo.boundingBox;
 	
-		const skeleton = skeletons[0];
+		// Dimensiones de la bounding box
+		var min = boundingBox.minimum;
+		var max = boundingBox.maximum;
+		var dimensions = max.subtract(min);
 	
-		// Reproducir todas las animaciones
-		scene.beginAnimation(skeleton, 0, skeleton.animationRanges[0].to, true);
+		console.log("Bounding Box Dimensions:");
+		console.log("Min:", min);
+		console.log("Max:", max);
+		console.log("Width:", dimensions.x);
+		console.log("Height:", dimensions.y);
+		console.log("Depth:", dimensions.z);
+	
+		// Asignar un PhysicsImpostor a la malla usando las dimensiones de la bounding box
+		initial.physicsImpostor = new BABYLON.PhysicsImpostor(initial, BABYLON.PhysicsImpostor.BoxImpostor, {
+			mass: 1,
+			restitution: 0.9,
+			nativeOptions: {
+				size: dimensions
+			}
+		}, scene);
 	});
+	/*BABYLON.SceneLoader.ImportMesh("","assets/character/", "character.glb", scene, function (meshes, particleSystems, skeletons) {
+		const character = meshes[0]; // Asumiendo que el primer mesh es el personaje principal
+		character.position = new BABYLON.Vector3(radius, 0, 0);
+		character.rotation.y = BABYLON.Tools.ToRadians(45); // Rotar 45 grados en el eje Y
 
-	let player;
-	return player;
+		const skeleton = skeletons[0];
+
+		// Animar la posición del personaje
+		scene.onBeforeRenderObservable.add(() => {
+			const deltaTime = engine.getDeltaTime() / 1000; // Tiempo transcurrido desde el último fotograma en segundos
+			angle += angularSpeed * deltaTime; // Actualizar el ángulo
+			
+			// Calcular la nueva posición
+			const x = radius * Math.cos(angle);
+			const z = radius * Math.sin(angle);
+			character.position.x = x;
+			character.position.z = z;
+	
+			// Orientar el personaje en la dirección del movimiento
+			character.rotation.y = -angle + Math.PI / 2;
+		});
+
+	});*/
+
+	
 }
 
 function createCamera(scene){
@@ -124,7 +152,6 @@ function createBoxCamera(camera){
 	let cameraBox = BABYLON.MeshBuilder.CreateBox('cameraBox', { height: 2, width: 2, depth: 2 }, scene);
 	cameraBox.isVisible = false;
 	cameraBox.position = camera.position.clone();
-	cameraBox.physicsImpostor = new BABYLON.PhysicsImpostor(cameraBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0 }, scene);
 	return cameraBox;
 }
 
@@ -280,17 +307,19 @@ function manageEvent(scene){
 
 
 function createObjects(scene){
-	BABYLON.SceneLoader.Append("assets/cubo/", "cubo1.glb", scene, function (mesh) {
+	/*BABYLON.SceneLoader.Append("assets/cubo/", "cubo1.glb", scene, function (mesh) {
 		// The mesh will be loaded and added to the scene
 		console.log(mesh);
 	}, null, function (scene, message) {
 		console.error(message);
-	});
+	});*/
 
 
 
 	const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 2, segments: 16}, scene);
 	sphere.position.y = 10;
+	sphere.position.x = -10;
+	sphere.position.z = 10;
 	const sphereMaterial = new BABYLON.StandardMaterial('sphereMaterial', scene);
 	sphereMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 1);
 	sphere.material = sphereMaterial;
@@ -353,7 +382,7 @@ function detectCollisions(scene) {
 	// Verificar intersección con cada malla en la escena
 	for (var i = 0; i < scene.meshes.length; i++) {
 		var mesh = scene.meshes[i];
-		
+		//console.log(mesh.name);
 		if (mesh !== camera && mesh.checkCollisions) {
 			var pickInfo = forwardRay.intersectsMesh(mesh);
 
