@@ -62,47 +62,22 @@ function createCannon(scene){
 const radius = 3; // Radio del círculo
 const angularSpeed = 0.1; // Velocidad angular en radianes por segundo
 let angle = 0; // Ángulo inicial
+var mesh;
 function loadPlayer(scene) {
 
 	
-	BABYLON.SceneLoader.ImportMesh("","assets/character/", "charo.glb", scene, function (meshes, particleSystems, skeletons) {
-		let initial = meshes[0];
-		initial.name = "trump";
-		console.log("Ms", meshes);
-		console.log("Ps", particleSystems);
-		console.log("Ss", skeletons);
-		//initial.position = new BABYLON.Vector3(2, 0, 0);
-		//initial.scaling = new BABYLON.Vector3(0.01, 0.01, 0.01); // Escalar a la mitad del tamaño original
-		initial.checkCollisions = true;
-		initial.refreshBoundingInfo();
+	BABYLON.SceneLoader.ImportMesh("", "assets/character/", "alejandro.glb", scene, function (meshes) {
+		
+		mesh = meshes[0];
+		mesh.rotate(BABYLON.Vector3.Up(), -10);
+		mesh.name = "personaje";
+		mesh.checkCollisions = true;
+		mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
 
-		//initial.physicsImpostor = new BABYLON.PhysicsImpostor(initial, BABYLON.PhysicsImpostor.CapsuleImpostor, { mass: 0, restitution: 0.9 }, scene);
-		console.log("cargado ", initial.name);
-		var boundingInfo = initial.getBoundingInfo();
-		console.log("fff",boundingInfo);
-		var boundingBox = boundingInfo.boundingBox;
 	
-		// Dimensiones de la bounding box
-		var min = boundingBox.minimum;
-		var max = boundingBox.maximum;
-		var dimensions = max.subtract(min);
-	
-		console.log("Bounding Box Dimensions:");
-		console.log("Min:", min);
-		console.log("Max:", max);
-		console.log("Width:", dimensions.x);
-		console.log("Height:", dimensions.y);
-		console.log("Depth:", dimensions.z);
-	
-		// Asignar un PhysicsImpostor a la malla usando las dimensiones de la bounding box
-		initial.physicsImpostor = new BABYLON.PhysicsImpostor(initial, BABYLON.PhysicsImpostor.BoxImpostor, {
-			mass: 1,
-			restitution: 0.9,
-			nativeOptions: {
-				size: dimensions
-			}
-		}, scene);
 	});
+
+
 	/*BABYLON.SceneLoader.ImportMesh("","assets/character/", "character.glb", scene, function (meshes, particleSystems, skeletons) {
 		const character = meshes[0]; // Asumiendo que el primer mesh es el personaje principal
 		character.position = new BABYLON.Vector3(radius, 0, 0);
@@ -402,4 +377,54 @@ function detectCollisions(scene) {
 			Posición de la cámara: ${camera.position}
 		`;
 	}
+}
+
+
+function importarModeloBoundingBox(){
+	BABYLON.SceneLoader.ImportMesh("","assets/character/", "tissue.glb", scene, function (meshes, particleSystems, skeletons) {
+		let initial = meshes[0];
+		for (let i = 0; i < meshes.length; i++){
+			var boundingBox = meshes[i].getBoundingInfo().boundingBox;
+			var box = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+			box.scaling = boundingBox.extendSize.scale(2); // Escalar para abarcar todo el bounding box
+			box.position = boundingBox.center;
+			box.isVisible = true; // Hacer la caja visible
+		}
+		//initial.name = "trump";
+		console.log("Ms", meshes);
+		console.log("Ps", particleSystems);
+		console.log("Ss", skeletons);
+		initial.position = new BABYLON.Vector3(5, 0, 0);
+		//initial.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Escalar a la mitad del tamaño original
+		initial.checkCollisions = true;
+		initial.rotation.y = 56;
+		initial.refreshBoundingInfo();
+
+		//initial.physicsImpostor = new BABYLON.PhysicsImpostor(initial, BABYLON.PhysicsImpostor.CapsuleImpostor, { mass: 0, restitution: 0.9 }, scene);
+		console.log("cargado ", initial.name);
+		var boundingInfo = initial.getBoundingInfo();
+		console.log("fff",boundingInfo);
+		var boundingBox = boundingInfo.boundingBox;
+	
+		// Dimensiones de la bounding box
+		var min = boundingBox.minimum;
+		var max = boundingBox.maximum;
+		var dimensions = max.subtract(min);
+	
+		console.log("Bounding Box Dimensions:");
+		console.log("Min:", min);
+		console.log("Max:", max);
+		console.log("Width:", dimensions.x);
+		console.log("Height:", dimensions.y);
+		console.log("Depth:", dimensions.z);
+	
+		// Asignar un PhysicsImpostor a la malla usando las dimensiones de la bounding box
+		initial.physicsImpostor = new BABYLON.PhysicsImpostor(initial, BABYLON.PhysicsImpostor.BoxImpostor, {
+			mass: 1,
+			restitution: 0.9,
+			nativeOptions: {
+				size: dimensions
+			}
+		}, scene);
+	});
 }
